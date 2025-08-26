@@ -8,6 +8,7 @@ import com.antonio.proyecto.product.model.Product;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ProductDAO {
 
@@ -33,7 +34,7 @@ public class ProductDAO {
 
             int rows = statement.executeUpdate();
 
-            if(row > 0){
+            if(rows > 0){
                 try (ResultSet resultSet = statement.getGeneratedKeys()){
                     if(resultSet.next()){
                         product.setId(resultSet.getLong(1));
@@ -44,6 +45,23 @@ public class ProductDAO {
         }
         return product;
     }
+
+    public boolean existsById(Long id) throws SQLException {
+        if (id == null) return false;
+
+        String sql = "SELECT Count(*) FROM products WHERE id = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)){
+            statement.setLong(1, id);
+            try (ResultSet resultSet = statement.executeQuery()){
+                if (resultSet.next()){
+                    return resultSet.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
     public void update(Product product) throws SQLException {
         String sql = "UPDATE products SET name = ?, price = ?, stock = ?, category_id = ? " +
                 " WHERE id=?";
@@ -79,6 +97,22 @@ public class ProductDAO {
         }
     }
 
+    public Optional<Product> findById(long id) throws SQLException {
+        String sql = "Select p.id, p.name, p.price, p.stock, p.category_id, \n" +
+                " c.name, as category_name \n" +
+                "FROM  products p JOIN categories c ON p.category_id = c.id where p.id = ?";
+        try (
+                PreparedStatement statement = connection.prepareStatement(sql)
+        ){
+            statement.setLong(1, id);
+            try (ResultSet resultSet = statement.executeQuery()){
+                if (resultSet.next()){
+                    return Optional.of(mapResult(resultSet));
+                }
+            }
+        }
+        return Optional.empty();
+    }
 
     public List<Product> findAll() throws SQLException{
         String sql = "Select p.id, p.name, p.price, p.stock, p.category_id, \n" +
@@ -92,6 +126,24 @@ public class ProductDAO {
             while (resultSet.next()){
                 Product product = mapResult(resultSet);
                 products.add(product);
+            }
+        }
+        return products;
+    }
+
+    public List<Product> findByCategoryId(Connection connection, Long categoryId) throws SQLException{
+        String sql = "SELECT p.id, p.name, p.price, p.stock, p.category_id,\n" +
+                "       c.name as category_name\n" +
+                "FROM products p JOIN categories c ON p.category_id = c.id Where p.category_id=?";
+        List<Product> products = new ArrayList<>();
+        try (
+                PreparedStatement statement = connection.prepareStatement(sql);
+        ){
+            statement.setLong(1, categoryId);
+            try (ResultSet resultSet = statement.executeQuery()){
+                while (resultSet.next()){
+                    products.add(mapResult(resultSet));
+                }
             }
         }
         return products;
