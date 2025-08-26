@@ -1,5 +1,6 @@
 package com.antonio.proyecto.product.model;
 
+import com.antonio.proyecto.category.model.Category;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -10,5 +11,5 @@ public class Product {
     private String name;
     private double price;
     private int stock;
-    private ProductCategory category;
+    private Category category;
 }
