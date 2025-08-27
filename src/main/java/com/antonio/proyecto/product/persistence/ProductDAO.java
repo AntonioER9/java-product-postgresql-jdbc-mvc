@@ -12,17 +12,15 @@ import java.util.Optional;
 
 public class ProductDAO {
 
-    private final Connection connection;
     private final CategoryDao categoryDao;
 
-    public ProductDAO(Connection connection, CategoryDao categoryDao) {
-        this.connection = connection;
+    public ProductDAO(CategoryDao categoryDao) {
         this.categoryDao = categoryDao;
     }
 
-    public Product save(Product product) throws SQLException{
+    public Product save(Connection connection, Product product) throws SQLException{
         String sql = "INSERT INTO products (name, price, stock, category_id) " +
-                " VALUES (?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?)";
 
         try (
                 PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
@@ -33,37 +31,19 @@ public class ProductDAO {
             statement.setLong(4, product.getCategory().getId());
 
             int rows = statement.executeUpdate();
-
-            if(rows > 0){
-                try (ResultSet resultSet = statement.getGeneratedKeys()){
-                    if(resultSet.next()){
-                        product.setId(resultSet.getLong(1));
-                        System.out.println("producto ingresado correctamente");
+            if(rows>0){
+                try(ResultSet generatedKey = statement.getGeneratedKeys()){
+                    if(generatedKey.next()){
+                        product.setId(generatedKey.getLong(1));
+                        System.out.println("Producto ingresado correctamente...");
                     }
                 }
             }
         }
         return product;
     }
-
-    public boolean existsById(Long id) throws SQLException {
-        if (id == null) return false;
-
-        String sql = "SELECT Count(*) FROM products WHERE id = ?";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)){
-            statement.setLong(1, id);
-            try (ResultSet resultSet = statement.executeQuery()){
-                if (resultSet.next()){
-                    return resultSet.getInt(1) > 0;
-                }
-            }
-        }
-        return false;
-    }
-
-    public void update(Product product) throws SQLException {
-        String sql = "UPDATE products SET name = ?, price = ?, stock = ?, category_id = ? " +
+    public void update(Connection connection, Product product) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ?,  category_id = ?" +
                 " WHERE id=?";
 
         try (
@@ -76,14 +56,13 @@ public class ProductDAO {
             statement.setLong(5, product.getId());
 
             int rows = statement.executeUpdate();
-
-
+            showMessage(rows, "El producto fue actualizado", "El producto no existe...");
 
         }
     }
 
-    public void delete(long id) throws SQLException{
-        String sql = "DELETE FROM products WHERE id = ? ";
+    public void delete(Connection connection, long id) throws SQLException{
+        String sql = "DELETE FROM products WHERE id=?";
 
         try (
                 PreparedStatement statement = connection.prepareStatement(sql)
@@ -97,22 +76,23 @@ public class ProductDAO {
         }
     }
 
-    public Optional<Product> findById(long id) throws SQLException {
-        String sql = "Select p.id, p.name, p.price, p.stock, p.category_id, \n" +
-                " c.name, as category_name \n" +
-                "FROM  products p JOIN categories c ON p.category_id = c.id where p.id = ?";
-        try (
-                PreparedStatement statement = connection.prepareStatement(sql)
-        ){
+
+    public boolean existsById(Connection connection, Long id) throws SQLException {
+        if(id==null) return false;
+
+        String sql = "Select Count(*) From products Where id = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
-            try (ResultSet resultSet = statement.executeQuery()){
-                if (resultSet.next()){
-                    return Optional.of(mapResult(resultSet));
+            try(ResultSet resultSet = statement.executeQuery()) {
+                if(resultSet.next()){
+                    return resultSet.getInt(1) > 0;
                 }
             }
         }
-        return Optional.empty();
+        return false;
     }
+
 
     public List<Product> findAll(Connection connection) throws SQLException{
         String sql = "SELECT p.id, p.name, p.price, p.stock, p.category_id,\n" +
@@ -130,10 +110,26 @@ public class ProductDAO {
         }
         return products;
     }
+    public Optional<Product> findById(Connection connection, Long id) throws SQLException{
+        String sql = "SELECT p.id, p.name, p.price, p.stock, p.category_id,\n" +
+                "       c.name as category_name\n" +
+                "FROM products p JOIN categories c ON p.category_id = c.id Where p.id=?";
+        try (
+                PreparedStatement statement = connection.prepareStatement(sql);
+        ){
+            statement.setLong(1, id);
+            try (ResultSet resultSet = statement.executeQuery()){
+                if (resultSet.next()){
+                    return Optional.of(mapResult(resultSet));
+                }
+            }
+        }
+        return Optional.empty();
+    }
 
     public List<Product> findByCategoryId(Connection connection, Long categoryId) throws SQLException{
         String sql = "SELECT p.id, p.name, p.price, p.stock, p.category_id,\n" +
-                "       c.name as category_name \n" +
+                "       c.name as category_name\n" +
                 "FROM products p JOIN categories c ON p.category_id = c.id Where p.category_id=?";
         List<Product> products = new ArrayList<>();
         try (
@@ -149,10 +145,13 @@ public class ProductDAO {
         return products;
     }
 
+
     private Product mapResult(ResultSet resultSet) throws SQLException {
         Long idCat = resultSet.getLong("category_id");
         String nameCat = resultSet.getString("category_name");
-        Category category = new Category(idCat,  nameCat);
+
+        Category category = new Category(idCat, nameCat);
+
         Product product = new Product(
                 resultSet.getLong("id"),
                 resultSet.getString("name"),
@@ -171,4 +170,18 @@ public class ProductDAO {
             System.out.println(messageError);
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

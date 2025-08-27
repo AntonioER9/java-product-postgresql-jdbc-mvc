@@ -14,9 +14,10 @@ public class ConnectionPool {
         System.out.println("Bloque static...");
 
         HikariConfig config = new HikariConfig();
+
         config.setJdbcUrl("jdbc:postgresql://ep-frosty-credit-ac8dwaj5-pooler.sa-east-1.aws.neon.tech/jdbc-products?sslmode=require");
         config.setUsername("neondb_owner");
-        config.setPassword("npg_gw1TJpbuz5ec");
+        config.setPassword("npg_7hNrioxdeX2P");
 
         config.setMaximumPoolSize(10);
         config.setMinimumIdle(2);
@@ -33,10 +34,10 @@ public class ConnectionPool {
         return dataSource.getConnection();
     }
 
-    public static void closePool() throws SQLException {
-        if (dataSource != null && !dataSource.isClosed()) {
+    public static void closePool(){
+        if(dataSource!=null && !dataSource.isClosed()){
             dataSource.close();
-            System.out.println("Cerrando conexion...");
+            System.out.println("Connection Pool cerrado...");
         }
     }
 

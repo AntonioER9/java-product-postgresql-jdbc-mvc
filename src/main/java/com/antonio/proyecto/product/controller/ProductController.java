@@ -40,6 +40,11 @@ public class ProductController {
         return services.getProductById(id);
     }
 
+    public Optional<Product> getProductByIdDB(long id) throws InvalidProductDataException, SQLException {
+        Validates.validate(id, "El id no puede ser nulo");
+        return services.getProductByIdDB(id);
+    }
+
     public void updateProduct(Product product) throws InvalidProductDataException, ProductNotFoundException, SQLException {
         Validates.validateObject(product, "El product no pueden ser nulo.");
         services.updateProduct(product);

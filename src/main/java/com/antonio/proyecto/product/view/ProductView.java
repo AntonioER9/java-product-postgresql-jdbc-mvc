@@ -51,14 +51,12 @@ public class ProductView {
 
     private void addProductView(){
         try {
-            long id = readValidLong("Ingrese el ID del producto:", 0);
             String name = readNonEmptyString("Ingrese el nombre del producto:");
             double price = readValidDouble("Ingrese un precio válido", 0);
             int stock = readValidInteger("Ingrese el stock del producto:", 0);
-//            String categoryString = readNonEmptyString("Ingrese la categoría del producto:\nELECTRÓNICOS, COMIDAS, LIBROS, OTROS");
-//            ProductCategory category = ProductCategory.valueOf(categoryString.trim().toUpperCase());
-            Category category = new Category(1l, "");
-            Product product = new Product(id, name, price, stock, category);
+            String categoryName = readNonEmptyString("Ingrese el nombre de la categoria");
+            Category category = new Category(categoryName.trim().toUpperCase());
+            Product product = new Product(name, price, stock, category);
             productController.addProduct(product);
         } catch (InvalidProductDataException | ProductNotFoundException e) {
             System.out.println(e.getMessage());
@@ -94,7 +92,7 @@ public class ProductView {
     private void updateProductView(){
         try {
             long id = readValidLong("Ingrese el ID del producto:", 0);
-            Optional<Product> productOptional = productController.getProductById(id);
+            Optional<Product> productOptional = productController.getProductByIdDB(id);
             if(productOptional.isPresent()){
                 System.out.println("Producto a MODIFICAR");
                 showProduct(productOptional.get());
@@ -112,23 +110,26 @@ public class ProductView {
                     case 2 -> productOptional.get().setPrice(readValidDouble("Ingrese un precio válido", 0));
                     case 3 -> productOptional.get().setStock(readValidInteger("Ingrese el stock del producto:", 0));
                     case 4 -> {
-//                        String categoryString = readNonEmptyString("Ingrese la categoría del producto:\nELECTRONICOS, COMIDAS, LIBROS, OTROS");
-//                        productOptional.get().setCategory(ProductCategory.valueOf(categoryString.trim().toUpperCase()));
+                        String categoryName = readNonEmptyString("Ingrese el nombre de la categoria");
+                        Category category = new Category(categoryName.trim().toUpperCase());
+                        productOptional.get().setCategory(category);
                     }
                     case 5 -> {
                         productOptional.get().setName(readNonEmptyString("Ingrese el nombre del producto:"));
                         productOptional.get().setPrice(readValidDouble("Ingrese un precio válido", 0));
                         productOptional.get().setStock(readValidInteger("Ingrese el stock del producto:", 0));
-                        String categoryString = readNonEmptyString("Ingrese la categoría del producto:\nELECTRONICOS, COMIDAS, LIBROS, OTROS");
-//                        productOptional.get().setCategory(ProductCategory.valueOf(categoryString.trim().toUpperCase()));
+                        String categoryName = readNonEmptyString("Ingrese el nombre de la categoria");
+                        Category category = new Category(categoryName.trim().toUpperCase());
+                        productOptional.get().setCategory(category);
                     }
                     case 6 -> {
                         return;
                     }
                 }
+                productController.updateProduct(productOptional.get());
+            }else {
+                System.out.println("El producto no existe...");
             }
-
-            productController.updateProduct(productOptional.get());
         } catch (InvalidProductDataException | ProductNotFoundException e) {
             System.out.println(e.getMessage());
         } catch (SQLException e) {
