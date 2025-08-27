@@ -39,36 +39,55 @@ public class ProductService {
         }
     }
 
+    /**
+     * Guarda un producto en la base de datos.
+     *
+     * @param product El producto a guardar.
+     * @throws InvalidProductDataException Si los datos del producto no son válidos.
+     * @throws ProductNotFoundException Si el producto ya existe.
+     * @throws SQLException Si ocurre un error de base de datos.
+     */
     public void saveProduct(Product product) throws InvalidProductDataException, ProductNotFoundException, SQLException {
+        // Valida los datos del producto antes de proceder
         ProductValidator.validate(product);
         Connection connection = null;
         try{
+            // Obtiene una conexión de la base de datos y desactiva el autocommit para manejo manual de transacciones
             connection = ConnectionPool.getConnection();
             connection.setAutoCommit(false);
 
+            // Busca si la categoría del producto ya existe por nombre
             Optional<Category> optionalCategory = ((ProductRepositoryServices)productRepository)
                     .getCategoryDao().findCategoryByName(connection, product.getName());
 
             if(optionalCategory.isPresent()){
+                // Si la categoría existe, verifica que el producto no exista por ID
                 if(!productRepository.existsById(product.getId())) {
+                    // Asigna la categoría existente al producto
                     product.setCategory(optionalCategory.get());
                 }else {
+                    // Si el producto ya existe, lanza excepción
                     throw new ProductNotFoundException("El producto con el ID: " + product.getId() + " que desea ya existe.");
                 }
             }else{
+                // Si la categoría no existe, la crea y la asigna al producto
                 Optional<Category> optionalNewCategory = ((ProductRepositoryServices)productRepository)
                         .getCategoryDao().save(connection, product.getCategory());
                 optionalNewCategory.ifPresent(product::setCategory);
             }
+            // Guarda el producto en la base de datos
             productRepository.save(connection, product);
+            // Confirma la transacción
             connection.commit();
             System.out.println("El producto ha sido agregado.");
         }catch (SQLException | InvalidProductDataException | ProductNotFoundException e){
+            // Si ocurre un error, revierte la transacción
             if(connection!=null){
                 connection.rollback();
             }
             throw e;
         }finally {
+            // Restaura el autocommit y cierra la conexión
             if(connection!=null){
                 try{
                     connection.setAutoCommit(true);
