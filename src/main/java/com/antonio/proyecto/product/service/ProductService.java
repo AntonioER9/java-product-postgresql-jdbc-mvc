@@ -6,6 +6,7 @@ import com.antonio.proyecto.product.interfaces.ProductRepository;
 import com.antonio.proyecto.product.model.Product;
 import com.antonio.proyecto.product.model.ProductCategory;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,7 +64,7 @@ public class ProductService {
 //
 //    Si se salta la vista (por un test, un API, etc.), las validaciones aún se ejecutan.
 
-    public void saveProduct(Product product) throws InvalidProductDataException, ProductNotFoundException {
+    public void saveProduct(Product product) throws InvalidProductDataException, ProductNotFoundException, SQLException {
         ProductValidator.validate(product);
         if(!productRepository.existsById(product.getId())) {
             productRepository.save(product);
@@ -73,7 +74,7 @@ public class ProductService {
         }
     }
 
-    public void deleteProduct(Long id) throws ProductNotFoundException {
+    public void deleteProduct(Long id) throws ProductNotFoundException, SQLException {
         Optional<Product> optionalProduct = productRepository.findById(id);
         if(optionalProduct.isPresent()) {
             productRepository.delete(id);
@@ -83,7 +84,7 @@ public class ProductService {
         }
     }
 
-    public void updateProduct(Product product) throws ProductNotFoundException, InvalidProductDataException {
+    public void updateProduct(Product product) throws ProductNotFoundException, InvalidProductDataException, SQLException {
         Optional<Product> optionalProduct = productRepository.findById(product.getId());
         if(optionalProduct.isPresent()) {
             productRepository.update(optionalProduct);

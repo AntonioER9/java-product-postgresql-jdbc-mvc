@@ -1,4 +1,5 @@
 package com.antonio.proyecto;
+import com.antonio.proyecto.category.model.CategoryDao;
 import com.antonio.proyecto.db.ConnectionPool;
 import com.antonio.proyecto.product.controller.ProductController;
 import com.antonio.proyecto.product.interfaces.ProductRepository;
@@ -14,17 +15,19 @@ public class Main {
 
         try(Connection connection = ConnectionPool.getConnection()){
             System.out.println("Conexión exitosa...");
+            CategoryDao categoryDao = new CategoryDao(connection);
+            ProductRepository repositoryServices = new ProductRepositoryServices(connection, categoryDao);
+            ProductService productService = new ProductService(repositoryServices);
+            ProductController controller = new ProductController(productService);
+            ProductView view = new ProductView(controller);
+            view.showMenu();
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             ConnectionPool.closePool();
         }
 
-//        ProductRepository repositoryServices = new ProductRepositoryServices();
-//        ProductService productService = new ProductService(repositoryServices);
-//        ProductController controller = new ProductController(productService);
-//        ProductView view = new ProductView(controller);
-//        view.showMenu();
+
 
     }
 }

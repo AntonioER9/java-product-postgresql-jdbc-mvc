@@ -20,7 +20,7 @@ public class ProductRepositoryServices implements ProductRepository {
 
     public ProductRepositoryServices(Connection connection, CategoryDao categoryDao) throws SQLException {
         productDAO = new ProductDAO(connection, categoryDao);
-        products = productDAO.findAll();
+        products = productDAO.findAll(connection);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class ProductRepositoryServices implements ProductRepository {
     }
 
     @Override
-    public void update(Optional<Product> existingProductOptional) throws ProductNotFoundException {
+    public void update(Optional<Product> existingProductOptional) throws ProductNotFoundException, SQLException {
         if (existingProductOptional.isPresent()) {
             Long idToUpdate = existingProductOptional.get().getId();
             int index = findIndexById(idToUpdate);

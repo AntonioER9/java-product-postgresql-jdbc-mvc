@@ -114,10 +114,10 @@ public class ProductDAO {
         return Optional.empty();
     }
 
-    public List<Product> findAll() throws SQLException{
-        String sql = "Select p.id, p.name, p.price, p.stock, p.category_id, \n" +
-                " c.name, as category_name \n" +
-                "FROM  products p JOIN categories c ON p.category_id = c.id";
+    public List<Product> findAll(Connection connection) throws SQLException{
+        String sql = "SELECT p.id, p.name, p.price, p.stock, p.category_id,\n" +
+                "       c.name as category_name\n" +
+                "FROM products p JOIN categories c ON p.category_id = c.id";
         List<Product> products = new ArrayList<>();
         try (
                 PreparedStatement statement = connection.prepareStatement(sql);
@@ -133,7 +133,7 @@ public class ProductDAO {
 
     public List<Product> findByCategoryId(Connection connection, Long categoryId) throws SQLException{
         String sql = "SELECT p.id, p.name, p.price, p.stock, p.category_id,\n" +
-                "       c.name as category_name\n" +
+                "       c.name as category_name \n" +
                 "FROM products p JOIN categories c ON p.category_id = c.id Where p.category_id=?";
         List<Product> products = new ArrayList<>();
         try (

@@ -17,26 +17,33 @@ public class CategoryDao {
         this.connection = connection;
     }
 
-    public Category save(Category category){
+    public Optional<Category> save(Category category){
         String sql = "INSERT INTO categories (name) " +
-                "VALUES (?) RETURNING id";
+                "VALUES (?)";
 
         try (
-                PreparedStatement statement = connection.prepareStatement(sql)
+                PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
         ){
             statement.setString(1, category.getName());
 
-            try(ResultSet resultSet = statement.executeQuery()){
-                if(resultSet.next()){
-                    long id = resultSet.getLong("id");
-                    category.setId(id);
-                    System.out.println("La categoria fue creada correctamente...");
+            int rows = statement.executeUpdate();
+
+            if(rows>0){
+                try (ResultSet resultSet = statement.getGeneratedKeys()){
+                    if(resultSet.next()){
+                        long id = resultSet.getLong(1);
+                        category.setId(id);
+                        return Optional.of(category);
+                    }
                 }
+                System.out.println("La categoria fue creada correctamente");
             }
+
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        return category;
+
+        return Optional.empty();
     }
 
     public void update(Category category) throws SQLException {
@@ -84,6 +91,22 @@ public class CategoryDao {
             }
         }
         return categories;
+    }
+
+    public Optional<Category> findCategoryByName(String categoryName) throws SQLException{
+        String sql = "Select * From categories Where name = ?";
+        List<Category> categories = new ArrayList<>();
+        try (
+                PreparedStatement statement = connection.prepareStatement(sql);
+        ){
+            statement.setString(1, categoryName);
+            try (ResultSet resultSet = statement.executeQuery()){
+                if (resultSet.next()){
+                    return Optional.of(mapResult(resultSet));
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     public Optional<Category> findById(Long id) throws SQLException{

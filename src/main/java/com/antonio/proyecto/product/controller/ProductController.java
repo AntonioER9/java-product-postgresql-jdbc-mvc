@@ -7,6 +7,7 @@ import com.antonio.proyecto.product.model.ProductCategory;
 import com.antonio.proyecto.product.service.ProductService;
 import com.antonio.proyecto.product.utils.Validates;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,12 +18,12 @@ public class ProductController {
         this.services = services;
     }
 
-    public void addProduct(Product product) throws InvalidProductDataException, ProductNotFoundException {
+    public void addProduct(Product product) throws InvalidProductDataException, ProductNotFoundException, SQLException {
         Validates.validateObject(product, "El product no pueden ser nulo.");
         services.saveProduct(product);
     }
 
-    public void removeProduct(Long id) throws InvalidProductDataException, ProductNotFoundException {
+    public void removeProduct(Long id) throws InvalidProductDataException, ProductNotFoundException, SQLException {
         Validates.validate(id, "El id no puede ser nulo");
         services.deleteProduct(id);
     }
@@ -39,7 +40,7 @@ public class ProductController {
         return services.getProductById(id);
     }
 
-    public void updateProduct(Product product) throws InvalidProductDataException, ProductNotFoundException {
+    public void updateProduct(Product product) throws InvalidProductDataException, ProductNotFoundException, SQLException {
         Validates.validateObject(product, "El product no pueden ser nulo.");
         services.updateProduct(product);
     }
